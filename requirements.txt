@@ -1,0 +1,4 @@
+requests==2.20
+twine==3.2.0
+black==19.10b0
+pylint==2.5.3
