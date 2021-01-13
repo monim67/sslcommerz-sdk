@@ -5,7 +5,7 @@ class SslcommerzException(IOError):
     """ An exception raised by sslcommerz_sdk app """
 
     def __init__(self, *args, **kwargs):
-        self.tran_id = kwargs.pop('tran_id', None)
+        self.tran_id = kwargs.pop("tran_id", None)
         super().__init__(*args, **kwargs)
 
     def __str__(self):
@@ -17,7 +17,7 @@ class SslcommerzRequestException(SslcommerzException, RequestException):
     """ RequestException raised by requests library """
 
 
-class SslcommerzApiException(SslcommerzException):
+class SslcommerzAPIException(SslcommerzException):
     """ Unexpected response or explicit error response from sslcommerz api """
 
 

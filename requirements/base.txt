@@ -1,0 +1,2 @@
+requests==2.22
+marshmallow==3.0.0

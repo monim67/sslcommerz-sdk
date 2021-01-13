@@ -1,42 +1,33 @@
-import enum
 import hashlib
+import json
 from contextlib import contextmanager
+
+from marshmallow import INCLUDE, Schema, fields, pre_load
 from requests.exceptions import RequestException
 
-from .exceptions import SslcommerzException, SslcommerzRequestException
+from .exceptions import (
+    SslcommerzException,
+    SslcommerzRequestException,
+)
 
 
-class ChoicesMeta(enum.EnumMeta):
-    @property
-    def choices(cls):
-        return [(member.value, member.label) for member in cls]
+class PayloadSchema(Schema):
+    amount = fields.Decimal(places=2)
+    base_fair = fields.Decimal(places=2)
+    currency_amount = fields.Decimal(places=2)
+    currency_rate = fields.Decimal(places=4)
+    store_amount = fields.Decimal(places=2)
+    discount_amount = fields.Decimal(places=2)
+    emi_amount = fields.Decimal(places=2)
+    emi_instalment = fields.Int()
+    risk_level = fields.Int()
 
+    class Meta:
+        unknown = INCLUDE
 
-class EnumChoice(str, enum.Enum, metaclass=ChoicesMeta):
-    def __new__(cls, value, label=None):
-        obj = str.__new__(cls, [value])
-        obj._value_ = value
-        obj.label = label or value
-        return obj
-
-    def __eq__(self, other):
-        return str(self) == str(other)
-
-    def __str__(self):
-        return str(self.value)
-
-
-class CustomFlagMixin:
-    def __or__(self, other):
-        return CustomFlag(f"{self},{other}")
-
-
-class CustomFlag(CustomFlagMixin):
-    def __init__(self, value):
-        self.value = value
-
-    def __repr__(self):
-        return str(self.value)
+    @pre_load
+    def envelope(self, in_data, **kwargs):
+        return {**in_data, "original": in_data, "json": json.dumps(in_data)}
 
 
 @contextmanager
@@ -55,7 +46,7 @@ def sslcommerz_exception_context(tran_id):
         raise SslcommerzException(ex, tran_id=tran_id) from ex
 
 
-def validate_verify_sign(store_passwd, payload):
+def is_verify_sign_valid(store_passwd, payload):
     verify_keys = payload["verify_key"].split(",")
     obj = {key: payload[key] for key in verify_keys}
     obj["store_passwd"] = hashlib.md5(store_passwd.encode()).hexdigest()

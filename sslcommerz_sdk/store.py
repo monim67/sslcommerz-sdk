@@ -1,8 +1,8 @@
 import requests
 
 from .enums import TransactionStatus
-from .exceptions import SslcommerzApiException, InvalidPaymentException
-from .helpers import validate_verify_sign
+from .exceptions import InvalidPaymentException, SslcommerzAPIException
+from .services import PayloadSchema, is_verify_sign_valid
 
 
 DEFAULT_CONFIG = {
@@ -14,10 +14,9 @@ DEFAULT_CONFIG = {
 
 
 class SslcommerzStore:
-    def __init__(self, **kwargs):
-        self.credentials = dict(
-            store_id=kwargs.pop("store_id"), store_passwd=kwargs.pop("store_passwd"),
-        )
+    def __init__(self, store_id, store_passwd, **kwargs):
+        self.id = store_id
+        self.credentials = dict(store_id=store_id, store_passwd=store_passwd)
         self.config = {**DEFAULT_CONFIG, **kwargs}
 
     def request(self, method, url, **kwargs):
@@ -31,35 +30,33 @@ class SslcommerzStore:
             data={**self.credentials, **kwargs},
         )
         if response.status_code != 200:
-            raise SslcommerzApiException(
+            raise SslcommerzAPIException(
                 f"Unexpected status code: {response.status_code}"
             )
         response_json = response.json()
         if response_json["status"] != "SUCCESS":
-            raise SslcommerzApiException(f"Error: {response_json['failedreason']}")
-        print(response_json)
+            raise SslcommerzAPIException(f"Error: {response_json['failedreason']}")
         return response_json
 
     def validate_ipn_payload(self, payload):
         try:
-            if not validate_verify_sign(self.credentials["store_passwd"], payload):
-                raise InvalidPaymentException("verify_sign mismatch")
-            if payload["status"] != TransactionStatus.VALID:
-                return None
-            response_json = self.validate_transaction(val_id=payload["val_id"])
-            if response_json["status"] not in (
-                TransactionStatus.VALID,
-                TransactionStatus.VALIDATED,
+            if not is_verify_sign_valid(
+                store_passwd=self.credentials["store_passwd"],
+                payload=payload["original"],
             ):
-                raise InvalidPaymentException(
-                    f"Payment status: {response_json['status']}"
-                )
-            for key in payload["verify_key"].split(","):
-                if payload[key] != response_json[key]:
-                    raise InvalidPaymentException(f"{key} mismatch")
-            return response_json
+                raise InvalidPaymentException("verify_sign mismatch")
+            if payload["status"] == TransactionStatus.VALID:
+                validation_response = self.validate_transaction(payload["val_id"])
+                if validation_response["status"] not in (
+                    TransactionStatus.VALID,
+                    TransactionStatus.VALIDATED,
+                ):
+                    raise InvalidPaymentException(
+                        f"Payment status: {validation_response['status']}"
+                    )
+                return PayloadSchema().load(validation_response)
         except KeyError as key:
-            raise InvalidPaymentException(f"{key} is missing in payload")
+            raise InvalidPaymentException(f"{key} is missing in payload") from key
 
     def validate_transaction(self, val_id):
         response = self.request(
@@ -68,7 +65,7 @@ class SslcommerzStore:
             params=dict(**self.credentials, val_id=val_id, format="json"),
         )
         if response.status_code != 200:
-            raise SslcommerzApiException(
+            raise SslcommerzAPIException(
                 f"Unexpected status code: {response.status_code}"
             )
         return response.json()

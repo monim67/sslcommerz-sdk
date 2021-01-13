@@ -1,0 +1,5 @@
+-r base.txt
+-r build.txt
+-r docs.txt
+ipython==7.19.0
+twine==3.2.0
