@@ -1,7 +1,7 @@
 from enum import Enum
 
 
-class ChoiceMixin:
+class Choices(Enum):
     def __str__(self):
         return str(self.value)
 
@@ -16,7 +16,7 @@ class ChoiceMixin:
         return [(choice.value, choice.name) for choice in cls]
 
 
-class TransactionStatus(ChoiceMixin, Enum):
+class TransactionStatus(Choices):
     INVALID = "INVALID"
     PENDING = "PENDING"
     VALIDATED = "VALIDATED"

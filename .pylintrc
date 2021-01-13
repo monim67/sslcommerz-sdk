@@ -3,7 +3,8 @@ disable=
   R,
   C,
   missing-docstring,
-  W0613, # Unused argument
+  W0143, # comparison-with-callable
+  W0613, # unused-argument
 
 [FORMAT]
 max-line-length=88 # black
