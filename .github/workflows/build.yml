@@ -1,0 +1,29 @@
+name: build
+
+on: ["push", "pull_request"]
+
+jobs:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip-ci')"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Python 3.5
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.5'
+
+      - name: Install
+        run: python3 -m pip install -r requirements/build.txt
+
+      - name: Lint
+        run: make lint
+
+      - name: Test & Coverage
+        run: make coverage
+
+      - name: Coveralls.io notification
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.COVERALLS_TOKEN }}

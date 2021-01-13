@@ -1,6 +1,9 @@
 [MASTER]
 disable=
+  R,
+  C,
   missing-docstring,
-  C0114, # missing-module-docstring
-  C0115, # missing-class-docstring
-  C0116, # missing-function-docstring
+  W0613, # Unused argument
+
+[FORMAT]
+max-line-length=88 # black
