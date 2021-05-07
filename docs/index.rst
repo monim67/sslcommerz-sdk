@@ -97,7 +97,7 @@ Indices and tables
     :height: 68px
     :alt: sslcommerz-sdk
 
-.. |build-status| image:: https://github.com/monim67/sslcommerz-sdk/workflows/build/badge.svg
+.. |build-status| image:: https://github.com/monim67/sslcommerz-sdk/workflows/build/badge.svg?event=push
     :target: https://github.com/monim67/sslcommerz-sdk/actions?query=build
     :alt: Build Status
     :height: 20px
