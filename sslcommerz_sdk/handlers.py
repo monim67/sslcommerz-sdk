@@ -7,6 +7,7 @@ from .exceptions import (
     TotalAmountTamperedException,
     TranIdReuseException,
 )
+from .orm_adapters.base import model_fields
 from .services import PayloadSchema, sslcommerz_exception_context
 
 
@@ -83,9 +84,9 @@ class PaymentHandler:
         session_props = dict(**options, value_d=session_pk)
         # value_d is used to identify session later while verifying transaction
         response_json = store.create_session(**session_props)
-        model_props = session_props.copy()
-        for key in ("ipn_url", "success_url", "fail_url", "cancel_url"):
-            del model_props[key]
+        model_props = {
+            key: value for key, value in session_props.items() if key in model_fields
+        }
         session = self.orm_adapter.create_session_instance(
             self.model,
             **model_props,
