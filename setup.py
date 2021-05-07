@@ -1,5 +1,7 @@
 from setuptools import setup
 
+import sslcommerz_sdk
+
 
 def get_long_description():
     with open("README.rst") as file:
@@ -8,7 +10,7 @@ def get_long_description():
 
 setup(
     name="sslcommerz-sdk",
-    version="1.0.2",
+    version=sslcommerz_sdk.__version__,
     description="Sslcommerz SDK for python",
     long_description=get_long_description(),
     long_description_content_type="text/x-rst",
