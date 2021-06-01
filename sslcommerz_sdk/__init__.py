@@ -8,5 +8,5 @@ def _make_version(major, minor, micro, releaselevel, serial):
     return version
 
 
-version_info = (1, 0, 3, "final", 0)
+version_info = (1, 0, 4, "final", 0)
 __version__ = _make_version(*version_info)

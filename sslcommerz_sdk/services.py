@@ -11,12 +11,19 @@ from .exceptions import (
 )
 
 
+class OptionalDecimalField(fields.Decimal):
+    def _deserialize(self, value, attr, data, **kwargs):
+        if value == "":
+            value = 0
+        return super()._deserialize(value, attr, data, **kwargs)
+
+
 class PayloadSchema(Schema):
     amount = fields.Decimal(places=2)
     base_fair = fields.Decimal(places=2)
     currency_amount = fields.Decimal(places=2)
     currency_rate = fields.Decimal(places=4)
-    store_amount = fields.Decimal(places=2)
+    store_amount = OptionalDecimalField(places=2)
     discount_amount = fields.Decimal(places=2)
     emi_amount = fields.Decimal(places=2)
     emi_instalment = fields.Int()
