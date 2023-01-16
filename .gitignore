@@ -1,8 +1,13 @@
-.vscode
 node_modules
 *.sqlite3
-/venv*
-/media
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.history/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -15,6 +20,7 @@ htmlcov/
 .tox/
 .coverage
 .coverage.*
+coverage/
 .cache
 nosetests.xml
 coverage.xml
@@ -40,4 +46,3 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
-

@@ -1,5 +1,0 @@
--r base.txt
--r build.txt
-ipython==7.16.1
-twine==3.2.0
-sphinx-rtd-theme==0.5.2

@@ -2,41 +2,89 @@ name: build
 
 on:
   push:
-    branches: ['*']
+    branches: ["*"]
   pull_request:
 
 jobs:
-  build:
-    if: "!contains(github.event.head_commit.message, 'skip-ci')"
+  pre-build:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11"]
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
-      - name: Set up Python 3.6
-        uses: actions/setup-python@v2
+      - name: Install poetry
+        run: pipx install poetry
+
+      - uses: actions/setup-python@v4
         with:
-          python-version: '3.6'
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
 
-      - name: Install
-        run: python3 -m pip install -r requirements/build.txt
+      - name: Check poetry.lock
+        run: |
+          poetry env use ${{ matrix.python-version }}
+          poetry lock --check
+
+      - name: Install dependencies
+        run: |
+          poetry env use ${{ matrix.python-version }}
+          poetry install --no-root --only build --no-ansi --no-interaction
+          poetry run pip install -c tests/pip-constraints.txt .
 
       - name: Lint
-        run: make lint
+        run: poetry run poe lint
 
-      - name: Test & Coverage
-        run: make coverage
+      - name: Test Coverage
+        run: poetry run poe test-cov
 
-      - name: Coveralls.io notification
-        uses: AndreMiras/coveralls-python-action@develop
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@master
         with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: run-${{ matrix.python-version }}
           parallel: true
-          flag-name: Unit Test
 
-  coveralls_finish:
-    needs: build
+  build:
     runs-on: ubuntu-latest
+    needs: pre-build
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.9", "3.8", "3.7"]
     steps:
-    - name: Coveralls Finished
-      uses: AndreMiras/coveralls-python-action@develop
-      with:
-        parallel-finished: true
+      - uses: actions/checkout@v3
+
+      - name: Install poetry
+        run: pipx install poetry
+
+      - uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: poetry
+
+      - name: Install dependencies
+        run: |
+          poetry env use ${{ matrix.python-version }}
+          poetry install --no-root --only build --no-ansi --no-interaction
+          poetry run pip install -c tests/pip-constraints.txt .
+
+      - name: Test Coverage
+        run: poetry run poe test-cov
+
+      - name: Coveralls Parallel
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          flag-name: run-${{ matrix.python-version }}
+          parallel: true
+
+  coveralls:
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Coveralls Finished
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          parallel-finished: true
